@@ -2,14 +2,15 @@
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="PDF_OCR_Explorer.MainPage">
+             x:Class="PDF_OCR_Explorer.MainPage" SizeChanged="Window_SizeChanged">
 
     <HorizontalStackLayout>
-        <ScrollView x:Name="ThumbnailView">
-            <BoxView Color="Aqua"></BoxView>
+        <ScrollView x:Name="ThumbnailView"  Loaded="ThumbnailView_Loaded">
+            <BoxView Color="HotPink"></BoxView>
         </ScrollView>
         <BoxView WidthRequest="2" Color="White">
         </BoxView>
+
         <ScrollView>
             <Label x:Name="Label"></Label>
         </ScrollView>
