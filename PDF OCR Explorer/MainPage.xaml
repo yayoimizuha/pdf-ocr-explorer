@@ -6,7 +6,7 @@
 
     <HorizontalStackLayout>
         <ScrollView x:Name="ThumbnailView"  Loaded="ThumbnailView_Loaded">
-            <BoxView Color="HotPink"></BoxView>
+            <BoxView Color="Blue"></BoxView>
         </ScrollView>
         <BoxView WidthRequest="2" Color="White">
         </BoxView>
