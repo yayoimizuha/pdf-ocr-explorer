@@ -1,10 +1,15 @@
 ﻿using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Azure;
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Maui.Storage;
+using Microsoft.VisualBasic;
 
 
-namespace PDF_OCR_Explorer{
-    public partial class MainPage : ContentPage{
-        int count = 0;
+namespace PDF_OCR_Explorer {
+    public partial class MainPage : ContentPage {
+        private readonly IFilePicker _filePicker;
+        int _count = 0;
 
         internal const string Endpoint = "https://tomokazu-katayama-1.cognitiveservices.azure.com/";
         internal const string Key1 = "90536c6541af426eab1c6e8e4a8cdafe";
@@ -20,9 +25,19 @@ namespace PDF_OCR_Explorer{
 
 
             Console.WriteLine(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
-            Label.Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),
-                "pdf_ocr_explorer");
             DirectoryReader = new DirectoryReader();
+            Label.Text = string.Join('_', DirectoryReader.Files);
+            for (int i = 0; i < 20; i++) {
+                Color color;
+                if (i % 2 == 0) {
+                    color = Colors.Red;
+                }
+                else {
+                    color = Colors.Aqua;
+                }
+
+                ThumbnailStack.Children.Add(new BoxView { MinimumHeightRequest = 400, Color = color });
+            }
         }
 
 
@@ -35,15 +50,12 @@ namespace PDF_OCR_Explorer{
         }
 
 
-        //        private void OnCounterClicked(object sender, EventArgs e) {
-        //            count++;
-        //
-        //            if (count == 1)
-        //                CounterBtn.Text = $"Clicked {count} time";
-        //            else
-        //                CounterBtn.Text = $"Clicked {count} times";
-        //
-        //            SemanticScreenReader.Announce(CounterBtn.Text);
-        //        }
+        private async void FilePickerButton_OnClicked(object sender, EventArgs e) {
+            var pickerRes = await FilePicker.PickMultipleAsync(PickOptions.Default);
+            foreach (var fileResult in pickerRes) {
+                Label.Text += fileResult.FullPath + Environment.NewLine;
+                DirectoryReader.DocumentAdd(fileResult.FullPath);
+            }
+        }
     }
 }

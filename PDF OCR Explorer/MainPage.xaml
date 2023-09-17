@@ -5,10 +5,15 @@
              x:Class="PDF_OCR_Explorer.MainPage" SizeChanged="Window_SizeChanged">
 
     <HorizontalStackLayout>
-        <ScrollView x:Name="ThumbnailView"  Loaded="ThumbnailView_Loaded">
-            <BoxView Color="Blue"></BoxView>
-        </ScrollView>
+        <VerticalStackLayout VerticalOptions="FillAndExpand">
+            <Button x:Name="FilePickerButton" Clicked="FilePickerButton_OnClicked" HeightRequest="50" Text="ファイル選択"></Button>
+            <ScrollView x:Name="ThumbnailView" Loaded="ThumbnailView_Loaded" VerticalOptions="FillAndExpand">
+                <VerticalStackLayout x:Name="ThumbnailStack" VerticalOptions="FillAndExpand"></VerticalStackLayout>
+            </ScrollView>
+        </VerticalStackLayout>
+
         <BoxView WidthRequest="2" Color="White">
+
         </BoxView>
 
         <ScrollView>
