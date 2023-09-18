@@ -1,10 +1,6 @@
-﻿using Azure.AI.FormRecognizer.DocumentAnalysis;
+﻿using System.Runtime.InteropServices.JavaScript;
+using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Azure;
-using CommunityToolkit.Maui.Alerts;
-using CommunityToolkit.Maui.Core;
-using CommunityToolkit.Maui.Storage;
-using Microsoft.VisualBasic;
-
 
 namespace PDF_OCR_Explorer{
     public partial class MainPage : ContentPage{
@@ -16,6 +12,11 @@ namespace PDF_OCR_Explorer{
         internal const string Key2 = "dd1eeaea8843491dadb258f8642b22ec";
         internal DirectoryReader DirectoryReader;
 
+        public class Thumbnail{
+            public string FileName { get; set; }
+            public string OrigFile { get; set; }
+            public byte ThumbData { get; set; }
+        }
 
         public MainPage() {
             var azureKeyCredential = new AzureKeyCredential(Key1);
@@ -27,17 +28,10 @@ namespace PDF_OCR_Explorer{
             Console.WriteLine(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             DirectoryReader = new DirectoryReader();
             Label.Text = string.Join('\n', DirectoryReader.Files);
-            for (int i = 0; i < 20; i++){
-                Color color;
-                if (i % 2 == 0){
-                    color = Colors.Red;
-                }
-                else{
-                    color = Colors.Aqua;
-                }
-
-                ThumbnailStack.Children.Add(new BoxView
-                    { MinimumHeightRequest = 400, Color = color, Margin = new Thickness(20) });
+            foreach (var filePath in DirectoryReader.Files){
+                ThumbnailStack.Children.Add(new ImageButton {
+                    MinimumHeightRequest = 400, Margin = new Thickness(20), Source = filePath
+                });
             }
         }
 
@@ -50,15 +44,23 @@ namespace PDF_OCR_Explorer{
             ThumbnailView_Loaded(sender, e);
         }
 
+        private readonly PickOptions _pickOptions = new() {
+            PickerTitle = "スキャンするファイルを選択してください。",
+            FileTypes = new FilePickerFileType(
+                new Dictionary<DevicePlatform, IEnumerable<string>> {
+                    { DevicePlatform.WinUI, new[] { ".pdf", ".jpg", ".png" } },
+                })
+        };
 
         private async void FilePickerButton_OnClicked(object sender, EventArgs e) {
-            var pickerRes = await FilePicker.PickMultipleAsync(PickOptions.Default);
+            var pickerRes = await FilePicker.PickMultipleAsync(_pickOptions);
             var addFiles = "";
             foreach (var fileResult in pickerRes){
                 Label.Text += fileResult.FullPath + Environment.NewLine;
                 addFiles += fileResult.FileName + Environment.NewLine;
                 DirectoryReader.DocumentAdd(fileResult.FullPath);
             }
+
             await DisplayAlert("追加されたファイル", addFiles, "OK");
         }
     }

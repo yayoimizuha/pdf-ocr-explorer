@@ -1,5 +1,10 @@
 ﻿using System.IO;
 
+#if WINDOWS
+using Windows.Data.Pdf;
+#endif
+
+
 namespace PDF_OCR_Explorer{
     public class DirectoryReader{
         internal readonly string SaveDir;
@@ -25,12 +30,14 @@ namespace PDF_OCR_Explorer{
 
             Console.WriteLine(Directory.GetDirectories(DataDir));
             Files = new List<string>(Directory.GetFiles(DataDir));
-            
         }
 
         internal short DocumentAdd(string filePath) {
             File.Copy(filePath,
                 Path.Combine(DataDir, Files.Count + Path.GetExtension(Path.GetFileName(filePath))));
+            if (Path.GetExtension(filePath).ToLower().Equals(".pdf")){
+            }
+
             Files.Add(filePath);
             return 0;
         }
