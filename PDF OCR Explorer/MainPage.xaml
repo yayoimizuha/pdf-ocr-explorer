@@ -4,20 +4,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PDF_OCR_Explorer.MainPage" SizeChanged="Window_SizeChanged">
 
-    <HorizontalStackLayout>
-        <VerticalStackLayout VerticalOptions="FillAndExpand">
-            <Button x:Name="FilePickerButton" Clicked="FilePickerButton_OnClicked" HeightRequest="50" Text="ファイル選択"></Button>
-            <ScrollView x:Name="ThumbnailView" Loaded="ThumbnailView_Loaded" VerticalOptions="FillAndExpand">
-                <VerticalStackLayout x:Name="ThumbnailStack" VerticalOptions="FillAndExpand"></VerticalStackLayout>
-            </ScrollView>
-        </VerticalStackLayout>
 
-        <BoxView WidthRequest="2" Color="White">
-
-        </BoxView>
-
-        <ScrollView>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400" x:Name="ThumbnailColumnDefinition"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="FilePickerButton" Clicked="FilePickerButton_OnClicked" Margin="20"
+                Text="ファイル選択"
+                Grid.Column="0" Grid.Row="0">
+        </Button>
+        <ScrollView x:Name="ThumbnailView" Loaded="ThumbnailView_Loaded" Grid.Column="0" Grid.Row="1">
+            <VerticalStackLayout x:Name="ThumbnailStack"></VerticalStackLayout>
+        </ScrollView>
+        <ScrollView Grid.Column="1" Grid.Row="0">
             <Label x:Name="Label"></Label>
         </ScrollView>
-    </HorizontalStackLayout>
+        <WebView Grid.Column="1" Grid.Row="1" Source="https://core.ac.uk/download/pdf/45286994.pdf"></WebView>
+
+    </Grid>
 </ContentPage>

@@ -6,8 +6,8 @@ using CommunityToolkit.Maui.Storage;
 using Microsoft.VisualBasic;
 
 
-namespace PDF_OCR_Explorer {
-    public partial class MainPage : ContentPage {
+namespace PDF_OCR_Explorer{
+    public partial class MainPage : ContentPage{
         private readonly IFilePicker _filePicker;
         int _count = 0;
 
@@ -26,23 +26,24 @@ namespace PDF_OCR_Explorer {
 
             Console.WriteLine(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             DirectoryReader = new DirectoryReader();
-            Label.Text = string.Join('_', DirectoryReader.Files);
-            for (int i = 0; i < 20; i++) {
+            Label.Text = string.Join('\n', DirectoryReader.Files);
+            for (int i = 0; i < 20; i++){
                 Color color;
-                if (i % 2 == 0) {
+                if (i % 2 == 0){
                     color = Colors.Red;
                 }
-                else {
+                else{
                     color = Colors.Aqua;
                 }
 
-                ThumbnailStack.Children.Add(new BoxView { MinimumHeightRequest = 400, Color = color });
+                ThumbnailStack.Children.Add(new BoxView
+                    { MinimumHeightRequest = 400, Color = color, Margin = new Thickness(20) });
             }
         }
 
 
         private void ThumbnailView_Loaded(object sender, EventArgs e) {
-            ThumbnailView.WidthRequest = Math.Min(400, Window.Width * .2);
+            ThumbnailColumnDefinition.Width = Math.Min(400, Window.Width * .2);
         }
 
         private void Window_SizeChanged(object sender, EventArgs e) {
@@ -52,10 +53,13 @@ namespace PDF_OCR_Explorer {
 
         private async void FilePickerButton_OnClicked(object sender, EventArgs e) {
             var pickerRes = await FilePicker.PickMultipleAsync(PickOptions.Default);
-            foreach (var fileResult in pickerRes) {
+            var addFiles = "";
+            foreach (var fileResult in pickerRes){
                 Label.Text += fileResult.FullPath + Environment.NewLine;
+                addFiles += fileResult.FileName + Environment.NewLine;
                 DirectoryReader.DocumentAdd(fileResult.FullPath);
             }
+            await DisplayAlert("追加されたファイル", addFiles, "OK");
         }
     }
 }
