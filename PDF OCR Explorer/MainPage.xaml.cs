@@ -45,22 +45,25 @@ namespace PDF_OCR_Explorer{
             return grid;
         }
 
+
         public MainPage() {
             var azureKeyCredential = new AzureKeyCredential(Key1);
             var documentAnalysisClient =
                 new DocumentAnalysisClient(new Uri(Endpoint), azureKeyCredential);
             InitializeComponent();
 
+            new Manager();
 
             Console.WriteLine(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             DirectoryReader = new DirectoryReader();
-            Label.Text = string.Join(Environment.NewLine, DirectoryReader.Files);
-            foreach (var filePath in DirectoryReader.Files){
-                ThumbnailStack.Children.Add(
-                    AddThumb(fp: filePath)
-                    //new ImageButton { MinimumHeightRequest = 400, Margin = new Thickness(20), Source = filePath }
-                );
-            }
+            //Label.Text = string.Join(Environment.NewLine, DirectoryReader.Files);
+            //foreach (var filePath in DirectoryReader.Files){
+            ThumbnailStack.Children.Add(
+                null
+                //AddThumb(fp: filePath)
+                //new ImageButton { MinimumHeightRequest = 400, Margin = new Thickness(20), Source = filePath }
+            );
+            //}
         }
 
 

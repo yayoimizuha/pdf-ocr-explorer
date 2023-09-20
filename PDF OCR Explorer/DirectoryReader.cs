@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Xamarin.Google.Crypto.Tink.Shaded.Protobuf;
 
 #if WINDOWS
 using Windows.Data.Pdf;
@@ -8,9 +9,10 @@ using Windows.Data.Pdf;
 namespace PDF_OCR_Explorer;
 
 public class DirectoryReader{
+
     internal readonly string SaveDir;
     internal readonly string DataDir;
-    internal List<string> Files;
+    //internal List<string> Files;
 
     public DirectoryReader() {
         SaveDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "pdf_ocr_explorer");
@@ -30,16 +32,16 @@ public class DirectoryReader{
         }
 
         Console.WriteLine(Directory.GetDirectories(DataDir));
-        Files = new List<string>(Directory.GetFiles(DataDir));
+        //Files = new List<string>(Directory.GetFiles(DataDir));
     }
 
     internal short DocumentAdd(string filePath) {
-        File.Copy(filePath,
-            Path.Combine(DataDir, Files.Count + Path.GetExtension(Path.GetFileName(filePath))));
+        // File.Copy(filePath,
+        //  Path.Combine(DataDir, Files.Count + Path.GetExtension(Path.GetFileName(filePath))));
         if (Path.GetExtension(filePath).ToLower().Equals(".pdf")){
         }
 
-        Files.Add(filePath);
+        //Files.Add(filePath);
         return 0;
     }
 }
