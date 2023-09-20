@@ -16,10 +16,9 @@ public class Manager{
             private readonly string _fileHash;
             private DateTime _addDate;
 
-            public File(string origFile, DateTime addDate) {
+            public File(string origFile) {
                 _origFile = origFile;
                 _fileHash = StringHasher(Path.GetFullPath(origFile));
-                _addDate = addDate;
                 Directory.CreateDirectory(Path.Combine(ApplicationDataRoot, _fileHash));
                 System.IO.File.Copy(_origFile,
                     Path.Combine(ApplicationDataRoot, _fileHash, Path.GetFileName(_origFile)));
