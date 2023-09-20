@@ -2,8 +2,8 @@
 using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Azure;
 
-namespace PDF_OCR_Explorer{
-    public partial class MainPage : ContentPage{
+namespace PDF_OCR_Explorer {
+    public partial class MainPage : ContentPage {
         private readonly IFilePicker _filePicker;
         int _count = 0;
 
@@ -12,7 +12,7 @@ namespace PDF_OCR_Explorer{
         internal const string Key2 = "dd1eeaea8843491dadb258f8642b22ec";
         internal DirectoryReader DirectoryReader;
 
-        public class Thumbnail{
+        public class Thumbnail {
             public string FileName { get; set; }
             public string OrigFile { get; set; }
             public byte ThumbData { get; set; }
@@ -28,10 +28,11 @@ namespace PDF_OCR_Explorer{
             Console.WriteLine(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             DirectoryReader = new DirectoryReader();
             Label.Text = string.Join('\n', DirectoryReader.Files);
-            foreach (var filePath in DirectoryReader.Files){
-                ThumbnailStack.Children.Add(new ImageButton {
-                    MinimumHeightRequest = 400, Margin = new Thickness(20), Source = filePath
-                });
+            foreach (var filePath in DirectoryReader.Files) {
+                ThumbnailStack.Children.Add(
+                    new Grid { }
+                    //new ImageButton { MinimumHeightRequest = 400, Margin = new Thickness(20), Source = filePath }
+                );
             }
         }
 
@@ -55,7 +56,7 @@ namespace PDF_OCR_Explorer{
         private async void FilePickerButton_OnClicked(object sender, EventArgs e) {
             var pickerRes = await FilePicker.PickMultipleAsync(_pickOptions);
             var addFiles = "";
-            foreach (var fileResult in pickerRes){
+            foreach (var fileResult in pickerRes) {
                 Label.Text += fileResult.FullPath + Environment.NewLine;
                 addFiles += fileResult.FileName + Environment.NewLine;
                 DirectoryReader.DocumentAdd(fileResult.FullPath);
