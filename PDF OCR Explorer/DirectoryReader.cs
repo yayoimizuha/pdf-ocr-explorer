@@ -1,15 +1,6 @@
-﻿using System.IO;
-using Xamarin.Google.Crypto.Tink.Shaded.Protobuf;
-
-#if WINDOWS
-using Windows.Data.Pdf;
-#endif
-
-
-namespace PDF_OCR_Explorer;
+﻿namespace PDF_OCR_Explorer;
 
 public class DirectoryReader{
-
     internal readonly string SaveDir;
     internal readonly string DataDir;
     //internal List<string> Files;
