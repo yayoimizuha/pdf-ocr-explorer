@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -9,17 +10,17 @@ using Windows.Data.Pdf;
 namespace PDF_OCR_Explorer;
 
 public class Manager {
-    private static readonly string ApplicationDataRoot =
+    public static string ApplicationDataRoot =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "pdf_ocr_explorer");
 
-    private static readonly string DataJsonPath = Path.Combine(ApplicationDataRoot, "data.json");
+    public static string DataJsonPath = Path.Combine(ApplicationDataRoot, "data.json");
 
     private static string StringHasher(string input) {
         var hashBytes = MD5.HashData(Encoding.Default.GetBytes(input));
         return BitConverter.ToString(hashBytes);
     }
 
-    private class PoeFile {
+    public class PoeFile {
         public string OrigFile { get; set; }
         public string FilePath { get; set; }
         public string FileHash { get; set; }
@@ -59,8 +60,8 @@ public class Manager {
         }
     }
 
-    private class FileList {
-        private static readonly List<PoeFile> Files = new();
+    public class FileList {
+        public List<PoeFile> Files { get; set; } = new List<PoeFile>();
 
 
         public FileList() {
@@ -77,7 +78,7 @@ public class Manager {
         }
 
 
-        private void Add(string file) {
+        public void Add(string file) {
             var addFile = new PoeFile(origFile: file, addDate: File.GetCreationTimeUtc(file));
             if (!Directory.Exists(Path.Combine(ApplicationDataRoot, addFile.FileHash))) return;
             Files.Add(addFile);
@@ -87,10 +88,12 @@ public class Manager {
             writer.Write(JsonSerializer.Serialize(Files));
         }
 
-        private void Remove(string file) {
+        public void Remove(string file) {
             foreach (var remFile in Files.FindAll(value => value.OrigFile.Equals(file))) {
                 Directory.Delete(Path.Combine(ApplicationDataRoot, remFile.FileHash));
             }
+
+            Files.RemoveAll(value => value.OrigFile.Equals(file));
         }
     }
 }
