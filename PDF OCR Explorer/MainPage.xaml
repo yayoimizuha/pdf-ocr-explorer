@@ -24,8 +24,6 @@
         <ScrollView Grid.Column="1" Grid.Row="0">
             <Label x:Name="Label"></Label>
         </ScrollView>
-
-        <WebView Grid.Column="1" Grid.Row="1" Source="https://core.ac.uk/download/pdf/45286994.pdf#page=4"></WebView>
-
+        <WebView Grid.Column="1" Grid.Row="1" x:Name="FileViewer"></WebView>
     </Grid>
 </ContentPage>

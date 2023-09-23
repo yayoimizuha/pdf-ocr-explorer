@@ -1,24 +1,19 @@
-﻿using System.Runtime.InteropServices.JavaScript;
+﻿using System.Diagnostics;
 using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Azure;
 
-namespace PDF_OCR_Explorer {
-    public partial class MainPage : ContentPage {
+namespace PDF_OCR_Explorer{
+    public partial class MainPage : ContentPage{
         private readonly IFilePicker _filePicker;
         int _count = 0;
 
         internal const string Endpoint = "https://tomokazu-katayama-1.cognitiveservices.azure.com/";
         internal const string Key1 = "90536c6541af426eab1c6e8e4a8cdafe";
         internal const string Key2 = "dd1eeaea8843491dadb258f8642b22ec";
-        internal DirectoryReader DirectoryReader;
+        private Manager.FileList _manager;
 
-        public class Thumbnail {
-            public string FileName { get; set; }
-            public string OrigFile { get; set; }
-            public byte ThumbData { get; set; }
-        }
 
-        private static Grid AddThumb(string fp) {
+        private Grid AddThumb(Manager.PoeFile poeFile) {
             var grid = new Grid {
                 HeightRequest = 400,
                 RowDefinitions = {
@@ -27,21 +22,40 @@ namespace PDF_OCR_Explorer {
                 },
                 ColumnDefinitions = {
                     new ColumnDefinition()
-                }
+                },
+                Margin = new Thickness(10)
             };
+
             grid.Add(
                 new Label {
-                    Text = Path.GetFileName(fp),
+                    Text = Path.GetFileName(poeFile.OrigFile) ?? string.Empty,
                     VerticalOptions = LayoutOptions.End,
                     FontSize = 30
                 }
                 , 0, 0
             );
-            grid.Add(
-                new BoxView {
-                    Color = Colors.Orange
-                }, 0, 1
-            );
+            var image = new Image { Source = poeFile.ThumbImage() };
+            var tapGestureRecognizer = new TapGestureRecognizer();
+            tapGestureRecognizer.Tapped += (sender, args) =>
+            {
+                Label.Text += Environment.NewLine + poeFile.OrigFile;
+                //FileViewer.Children.Clear();
+                //if (Path.GetExtension(poeFile.FilePath)!.ToLower().Equals(".pdf")){
+                //FileViewer.Children.Add(new WebView { Source = poeFile.FilePath });
+                FileViewer.Source = poeFile.FilePath;
+                //}
+                //else{
+                //    FileViewer.Children.Add(new Image { Source = poeFile.FilePath });
+                //}
+                foreach (var view in ThumbnailStack.Children){
+                    var stackChild = (Grid)view;
+                    stackChild.BackgroundColor = Colors.Transparent;
+                }
+
+                grid.BackgroundColor = Colors.DarkOliveGreen;
+            };
+            image.GestureRecognizers.Add(tapGestureRecognizer);
+            grid.Add(image, 0, 1);
             return grid;
         }
 
@@ -52,16 +66,18 @@ namespace PDF_OCR_Explorer {
                 new DocumentAnalysisClient(new Uri(Endpoint), azureKeyCredential);
             InitializeComponent();
 
-            var manager = new Manager.FileList();
+            _manager = new Manager.FileList();
 
-            Console.WriteLine(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
+            Debug.Print(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             // DirectoryReader = new DirectoryReader();
             //Label.Text = string.Join(Environment.NewLine, DirectoryReader.Files);
             //foreach (var filePath in DirectoryReader.Files){
-            foreach (var file in manager.Files) {
-                AddThumb(fp: file.FilePath);
+            foreach (var file in _manager.Files){
+                Debug.Print(file.OrigFile);
+                ThumbnailStack.Children.Add(AddThumb(file));
             }
-            
+
+
             //}
         }
 
@@ -86,16 +102,14 @@ namespace PDF_OCR_Explorer {
         private async void FilePickerButton_OnClicked(object sender, EventArgs e) {
             var pickerRes = await FilePicker.PickMultipleAsync(_pickOptions);
             var addFiles = "";
-            foreach (var fileResult in pickerRes) {
+            foreach (var fileResult in pickerRes){
                 Label.Text += Environment.NewLine + fileResult.FullPath;
                 addFiles += fileResult.FileName + Environment.NewLine;
-                DirectoryReader.DocumentAdd(fileResult.FullPath);
-                ThumbnailStack.Children.Add(
-                    AddThumb(fileResult.FullPath)
-                );
+                var addFile = _manager.Add(file: fileResult.FullPath);
+                ThumbnailStack.Children.Add(AddThumb(addFile));
             }
 
-            if (addFiles.Length != 0) {
+            if (addFiles.Length != 0){
                 await DisplayAlert("追加されたファイル", addFiles, "OK");
             }
         }
