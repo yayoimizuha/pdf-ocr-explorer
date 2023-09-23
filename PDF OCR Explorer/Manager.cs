@@ -23,6 +23,7 @@ public class Manager{
 
     public class PoeFile{
         public string OrigFile { get; set; }
+        public string DispName { get; set; } = String.Empty;
         [JsonIgnore] public string FilePath { get; set; }
         [JsonIgnore] public string FileHash { get; set; }
         public DateTime AddDate { get; set; }
@@ -89,6 +90,7 @@ public class Manager{
 
         public PoeFile Add(string file) {
             var addFile = new PoeFile(origFile: file, addDate: File.GetCreationTimeUtc(file));
+            addFile.DispName = Path.GetFileName(addFile.OrigFile);
             if (Directory.Exists(Path.Combine(ApplicationDataRoot, addFile.FileHash))) return addFile;
             Files.Add(addFile);
             Directory.CreateDirectory(Path.Combine(ApplicationDataRoot, addFile.FileHash));

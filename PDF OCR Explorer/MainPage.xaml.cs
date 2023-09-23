@@ -54,7 +54,8 @@ namespace PDF_OCR_Explorer{
 
                 grid.BackgroundColor = Colors.DarkOliveGreen;
             };
-            image.GestureRecognizers.Add(tapGestureRecognizer);
+            //image.GestureRecognizers.Add(tapGestureRecognizer);
+            grid.GestureRecognizers.Add(tapGestureRecognizer);
             grid.Add(image, 0, 1);
             return grid;
         }
