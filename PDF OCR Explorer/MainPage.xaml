@@ -24,6 +24,6 @@
         <ScrollView Grid.Column="1" Grid.Row="0">
             <Label x:Name="Label"></Label>
         </ScrollView>
-        <WebView Grid.Column="1" Grid.Row="1" x:Name="FileViewer"></WebView>
+        <WebView Grid.Column="1" Grid.Row="1" x:Name="FileViewer" Source="https://example.com/"></WebView>
     </Grid>
 </ContentPage>

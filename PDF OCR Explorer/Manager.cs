@@ -10,7 +10,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace PDF_OCR_Explorer;
 
-public class Manager{
+public class Manager {
     public static string ApplicationDataRoot =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "pdf_ocr_explorer");
 
@@ -21,7 +21,7 @@ public class Manager{
         return BitConverter.ToString(hashBytes);
     }
 
-    public class PoeFile{
+    public class PoeFile {
         public string OrigFile { get; set; }
         public string DispName { get; set; } = String.Empty;
         [JsonIgnore] public string FilePath { get; set; }
@@ -39,7 +39,7 @@ public class Manager{
         public ImageSource ThumbImage() {
             ImageSource returnImageSource;
 
-            if (Path.GetExtension(OrigFile)!.ToLower().Equals(".pdf")){
+            if (Path.GetExtension(OrigFile)!.ToLower().Equals(".pdf")) {
 #if WINDOWS
                 //var renderOptions = new PdfPageRenderOptions();
                 //var pdfFile = await Windows.Storage.StorageFile.GetFileFromPathAsync(OrigFile);
@@ -63,7 +63,7 @@ public class Manager{
 #endif
                 returnImageSource = ImageSource.FromUri(new Uri("https://mizuha-dev.com/files/Adobe_PDF.svg.png"));
             }
-            else{
+            else {
                 returnImageSource = ImageSource.FromFile(OrigFile);
             }
 
@@ -71,7 +71,7 @@ public class Manager{
         }
     }
 
-    public class FileList{
+    public class FileList {
         public List<PoeFile> Files { get; set; } = new List<PoeFile>();
 
 
@@ -80,11 +80,12 @@ public class Manager{
             Files = JsonSerializer.Deserialize<List<PoeFile>>(File.ReadAllText(DataJsonPath));
         }
 
+        public void Write() {
+            File.WriteAllText(DataJsonPath, JsonSerializer.Serialize(Files));
+        }
+
         ~FileList() {
-            using var writer = new StreamWriter(DataJsonPath);
-            writer.Write(JsonSerializer.Serialize(Files));
-            writer.Flush();
-            writer.Close();
+            Write();
         }
 
 
@@ -95,17 +96,17 @@ public class Manager{
             Files.Add(addFile);
             Directory.CreateDirectory(Path.Combine(ApplicationDataRoot, addFile.FileHash));
             File.Copy(sourceFileName: file, destFileName: addFile.FilePath);
-            using var writer = new StreamWriter(DataJsonPath);
-            writer.Write(JsonSerializer.Serialize(Files));
+            Write();
             return addFile;
         }
 
         public void Remove(string file) {
-            foreach (var remFile in Files.FindAll(value => value.OrigFile.Equals(file))){
-                Directory.Delete(Path.Combine(ApplicationDataRoot, remFile.FileHash));
+            foreach (var remFile in Files.FindAll(value => value.OrigFile.Equals(file))) {
+                Directory.Delete(Path.Combine(ApplicationDataRoot, remFile.FileHash), true);
             }
 
             Files.RemoveAll(value => value.OrigFile.Equals(file));
+            Write();
         }
     }
 }

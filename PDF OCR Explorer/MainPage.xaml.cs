@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics;
 using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Azure;
+using MauiIcons.Fluent;
 
-namespace PDF_OCR_Explorer{
-    public partial class MainPage : ContentPage{
+namespace PDF_OCR_Explorer {
+    public partial class MainPage : ContentPage {
         private readonly IFilePicker _filePicker;
         int _count = 0;
 
@@ -21,33 +22,27 @@ namespace PDF_OCR_Explorer{
                     new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }
                 },
                 ColumnDefinitions = {
-                    new ColumnDefinition()
+                    new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                    new ColumnDefinition { Width = new GridLength(50) },
+                    new ColumnDefinition { Width = new GridLength(50) }
                 },
                 Margin = new Thickness(10)
             };
 
-            grid.Add(
-                new Label {
-                    Text = Path.GetFileName(poeFile.OrigFile) ?? string.Empty,
-                    VerticalOptions = LayoutOptions.End,
-                    FontSize = 30
-                }
-                , 0, 0
-            );
+            var fileNameLabel = new Label {
+                Text = Path.GetFileName(poeFile.DispName) ?? string.Empty,
+                VerticalOptions = LayoutOptions.End,
+                FontSize = 20
+            };
+            grid.SetRow(fileNameLabel, 0);
+            grid.SetColumn(fileNameLabel, 0);
+            grid.Add(fileNameLabel);
             var image = new Image { Source = poeFile.ThumbImage() };
             var tapGestureRecognizer = new TapGestureRecognizer();
-            tapGestureRecognizer.Tapped += (sender, args) =>
-            {
+            tapGestureRecognizer.Tapped += (sender, args) => {
                 Label.Text += Environment.NewLine + poeFile.OrigFile;
-                //FileViewer.Children.Clear();
-                //if (Path.GetExtension(poeFile.FilePath)!.ToLower().Equals(".pdf")){
-                //FileViewer.Children.Add(new WebView { Source = poeFile.FilePath });
                 FileViewer.Source = poeFile.FilePath;
-                //}
-                //else{
-                //    FileViewer.Children.Add(new Image { Source = poeFile.FilePath });
-                //}
-                foreach (var view in ThumbnailStack.Children){
+                foreach (var view in ThumbnailStack.Children) {
                     var stackChild = (Grid)view;
                     stackChild.BackgroundColor = Colors.Transparent;
                 }
@@ -56,7 +51,60 @@ namespace PDF_OCR_Explorer{
             };
             //image.GestureRecognizers.Add(tapGestureRecognizer);
             grid.GestureRecognizers.Add(tapGestureRecognizer);
-            grid.Add(image, 0, 1);
+            var nameEditButton = new ImageButton {
+                Source = (ImageSource)new MauiIcon {
+                    Icon = FluentIcons.Edit20,
+                    IconColor = Colors.WhiteSmoke
+                }
+            };
+            nameEditButton.Clicked += async (s, e) => {
+                var changedTitle = await DisplayPromptAsync("ファイル名を入力してください。", "", initialValue: poeFile.DispName) ??
+                                   poeFile.DispName;
+
+                fileNameLabel.Text = changedTitle;
+                foreach (var file1 in _manager.Files.FindAll(file => file.OrigFile.Equals(poeFile.OrigFile))) {
+                    file1.DispName = changedTitle;
+                }
+
+                poeFile.DispName = changedTitle;
+                _manager.Write();
+            };
+            grid.SetColumn(nameEditButton, 1);
+            grid.SetRow(nameEditButton, 0);
+            grid.Add(nameEditButton);
+
+
+            var removeButton = new ImageButton {
+                Source = (ImageSource)new MauiIcon {
+                    Icon = FluentIcons.Delete20,
+                    IconColor = Colors.WhiteSmoke
+                }
+            };
+            removeButton.Clicked += (sender, args) => {
+                _manager.Remove(poeFile.OrigFile);
+                foreach (var thumbnailStackChild in ThumbnailStack.ToArray()) {
+                    var stackedGrid = (Grid)thumbnailStackChild;
+                    if (!((Label)stackedGrid.Children[2]).Text.Equals(poeFile.FileHash)) continue;
+                    ThumbnailStack.Remove(thumbnailStackChild);
+                    break;
+                }
+
+
+                //grid.Clear();
+                _manager.Write();
+            };
+            var recLabel = new Label {
+                Text = poeFile.FileHash,
+                IsVisible = false,
+            };
+            grid.Add(recLabel, 0, 0);
+            grid.SetColumn(removeButton, 2);
+            grid.SetRow(removeButton, 0);
+            grid.Add(removeButton);
+            //grid.Add(image, 0, 1);
+            grid.SetRow(image, 1);
+            grid.SetColumnSpan(image, 3);
+            grid.Add(image);
             return grid;
         }
 
@@ -73,7 +121,7 @@ namespace PDF_OCR_Explorer{
             // DirectoryReader = new DirectoryReader();
             //Label.Text = string.Join(Environment.NewLine, DirectoryReader.Files);
             //foreach (var filePath in DirectoryReader.Files){
-            foreach (var file in _manager.Files){
+            foreach (var file in _manager.Files) {
                 Debug.Print(file.OrigFile);
                 ThumbnailStack.Children.Add(AddThumb(file));
             }
@@ -103,14 +151,14 @@ namespace PDF_OCR_Explorer{
         private async void FilePickerButton_OnClicked(object sender, EventArgs e) {
             var pickerRes = await FilePicker.PickMultipleAsync(_pickOptions);
             var addFiles = "";
-            foreach (var fileResult in pickerRes){
+            foreach (var fileResult in pickerRes) {
                 Label.Text += Environment.NewLine + fileResult.FullPath;
                 addFiles += fileResult.FileName + Environment.NewLine;
                 var addFile = _manager.Add(file: fileResult.FullPath);
                 ThumbnailStack.Children.Add(AddThumb(addFile));
             }
 
-            if (addFiles.Length != 0){
+            if (addFiles.Length != 0) {
                 await DisplayAlert("追加されたファイル", addFiles, "OK");
             }
         }
