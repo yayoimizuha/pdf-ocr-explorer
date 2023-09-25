@@ -1,7 +1,10 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure;
+using Azure.AI.FormRecognizer.DocumentAnalysis;
 
 #if WINDOWS
 using Windows.Data.Pdf;
@@ -20,6 +23,9 @@ public class Manager {
         var hashBytes = MD5.HashData(Encoding.Default.GetBytes(input));
         return BitConverter.ToString(hashBytes);
     }
+
+    public static DocumentAnalysisClient AnalysisClient;
+
 
     public class PoeFile {
         public string OrigFile { get; set; }
@@ -69,15 +75,28 @@ public class Manager {
 
             return returnImageSource;
         }
+
+        public async Task Ocr() {
+            var jsonPath = Path.Combine(ApplicationDataRoot, FileHash, "ocr.json");
+            if (File.Exists(jsonPath)) return;
+            await using var fileStream = new FileStream(FilePath, FileMode.Open);
+            var operation = await AnalysisClient.AnalyzeDocumentAsync(WaitUntil.Completed, "prebuilt-read", fileStream);
+            var res = operation.Value;
+            await File.WriteAllTextAsync(jsonPath, JsonSerializer.Serialize(res));
+            foreach (var documentPage in res.Pages) {
+                Debug.Write(documentPage.ToString());
+            }
+        }
     }
 
     public class FileList {
         public List<PoeFile> Files { get; set; } = new List<PoeFile>();
 
 
-        public FileList() {
+        public FileList(DocumentAnalysisClient client) {
             if (!File.Exists(DataJsonPath)) return;
             Files = JsonSerializer.Deserialize<List<PoeFile>>(File.ReadAllText(DataJsonPath));
+            AnalysisClient = client;
         }
 
         public void Write() {

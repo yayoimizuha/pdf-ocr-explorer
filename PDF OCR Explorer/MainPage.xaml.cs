@@ -115,7 +115,8 @@ namespace PDF_OCR_Explorer {
                 new DocumentAnalysisClient(new Uri(Endpoint), azureKeyCredential);
             InitializeComponent();
 
-            _manager = new Manager.FileList();
+
+            _manager = new Manager.FileList(documentAnalysisClient);
 
             Debug.Print(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             // DirectoryReader = new DirectoryReader();
@@ -151,15 +152,21 @@ namespace PDF_OCR_Explorer {
         private async void FilePickerButton_OnClicked(object sender, EventArgs e) {
             var pickerRes = await FilePicker.PickMultipleAsync(_pickOptions);
             var addFiles = "";
+            var tasks = new List<Task>();
             foreach (var fileResult in pickerRes) {
                 Label.Text += Environment.NewLine + fileResult.FullPath;
                 addFiles += fileResult.FileName + Environment.NewLine;
                 var addFile = _manager.Add(file: fileResult.FullPath);
                 ThumbnailStack.Children.Add(AddThumb(addFile));
+                tasks.Add(addFile.Ocr());
             }
 
             if (addFiles.Length != 0) {
                 await DisplayAlert("追加されたファイル", addFiles, "OK");
+            }
+
+            foreach (var task in tasks) {
+                await task;
             }
         }
     }
