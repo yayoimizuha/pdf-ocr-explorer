@@ -17,6 +17,8 @@
             </Border>
 
         </HorizontalStackLayout>
-        <VerticalStackLayout Grid.Row="1" x:Name="SearchRes"></VerticalStackLayout>
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout x:Name="SearchRes"></VerticalStackLayout>
+        </ScrollView>
     </Grid>
 </ContentPage>

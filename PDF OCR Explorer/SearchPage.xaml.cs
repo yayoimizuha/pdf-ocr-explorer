@@ -42,12 +42,11 @@ public partial class SearchPage {
             VerticalOptions = LayoutOptions.Center,
             FontSize = fontSize
         }, 2);
-        var splitStr = lineText.Split($" {queryText} ", StringSplitOptions.None);
+        var splitStr = $" {lineText} ".Split(queryText, StringSplitOptions.None);
         var formattedString = new FormattedString();
-        formattedString.Spans.Add(new Span { Text = lineText.Split(queryText)[0].Remove(0, 1) });
+        formattedString.Spans.Add(new Span { Text = splitStr[0].Remove(0, 1) });
         formattedString.Spans.Add(new Span { Text = queryText, TextColor = Colors.Red });
-        formattedString.Spans.Add(new Span
-            { Text = lineText.Split(queryText)[1].Remove(lineText.Split(queryText)[1].Length - 1) });
+        formattedString.Spans.Add(new Span { Text = splitStr[1].Remove(splitStr[1].Length - 1) });
         grid.Add(new Label {
             FormattedText = formattedString,
             HorizontalOptions = LayoutOptions.Center,
@@ -63,6 +62,7 @@ public partial class SearchPage {
         if (SearchEntry.Text == "") {
             return;
         }
+        SearchRes.Clear();
 
         foreach (var directory in Directory.GetDirectories(Manager.ApplicationDataRoot)) {
             var jsonPath = Path.Combine(Manager.ApplicationDataRoot, directory, "ocr.json");
@@ -76,10 +76,10 @@ public partial class SearchPage {
 
             var ocrData =
                 JsonSerializer.Deserialize<OcrResultJson>(File.ReadAllText(jsonPath));
-            SearchRes.Clear();
             for (var pageNum = 0; pageNum < ocrData.Pages.Length; pageNum++) {
                 foreach (var documentLine in ocrData.Pages[pageNum].Lines) {
-                    if (documentLine.Content.Replace(" ", "").Contains(SearchEntry.Text)) {
+                    documentLine.Content = documentLine.Content.Replace(" ", "");
+                    if (documentLine.Content.Contains(SearchEntry.Text, StringComparison.Ordinal)) {
                         SearchRes.Add(AddQueryResult(fileHash: Path.GetFileName(directory), page: (uint)pageNum,
                             lineText: documentLine.Content, queryText: SearchEntry.Text));
                     }
