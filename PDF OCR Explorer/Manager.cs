@@ -79,6 +79,7 @@ public class Manager{
         public async Task Ocr() {
             var jsonPath = Path.Combine(ApplicationDataRoot, FileHash, "ocr.json");
             if (File.Exists(jsonPath)) return;
+            File.Create(jsonPath).Close();
             await using var fileStream = File.OpenRead(FilePath);
             using var memStream = new MemoryStream();
             await fileStream.CopyToAsync(memStream);
@@ -131,5 +132,9 @@ public class Manager{
             Files.RemoveAll(value => value.OrigFile.Equals(file));
             Write();
         }
+    }
+
+    internal static string PackComma(string str) {
+        return $"\"{str}\"";
     }
 }

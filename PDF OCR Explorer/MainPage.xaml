@@ -21,13 +21,13 @@
         <ScrollView Loaded="ThumbnailView_Loaded" Grid.Column="0" Grid.Row="1">
             <VerticalStackLayout x:Name="ThumbnailStack"></VerticalStackLayout>
         </ScrollView>
-        <HorizontalStackLayout Grid.Column="1" Grid.Row="0">
+        <HorizontalStackLayout Grid.Column="1" Grid.Row="0" HorizontalOptions="Fill">
             <ImageButton Source="{fluent:Icon Icon=Search20}" BorderColor="WhiteSmoke"
                          Clicked="DocumentSearchButtonOnClicked"
                          WidthRequest="100">
             </ImageButton>
-            <ScrollView>
-                <Label x:Name="LogViewer"></Label>
+            <ScrollView HorizontalOptions="Fill">
+                <Label x:Name="LogViewer" x:FieldModifier="protected" HorizontalOptions="Fill"></Label>
             </ScrollView>
         </HorizontalStackLayout>
 

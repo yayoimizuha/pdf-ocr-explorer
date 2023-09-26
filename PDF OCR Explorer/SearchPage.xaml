@@ -4,11 +4,18 @@
              x:Class="PDF_OCR_Explorer.SearchPage">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="100"></RowDefinition>
+            <RowDefinition Height="72"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-        <HorizontalStackLayout Grid.Row="0">
-            <Image Source="{fluent:Icon Search48}"></Image>
+        <HorizontalStackLayout Grid.Row="0" HorizontalOptions="Fill">
+
+            <Image Source="{fluent:Icon Icon=Search48}" WidthRequest="48" HeightRequest="48" />
+            <Border Stroke="Aqua" HorizontalOptions="Center" StrokeThickness="4">
+                <Entry Placeholder="検索するテキストを入力" PlaceholderColor="DarkGray" Completed="SearchEntry_OnCompleted"
+                       MinimumWidthRequest="252" FontAutoScalingEnabled="True" FontSize="32" x:Name="SearchEntry">
+                </Entry>
+            </Border>
+
         </HorizontalStackLayout>
         <VerticalStackLayout Grid.Row="1" x:Name="SearchRes"></VerticalStackLayout>
     </Grid>

@@ -11,10 +11,10 @@ namespace PDF_OCR_Explorer{
         internal const string Endpoint = "https://tomokazu-katayama-1.cognitiveservices.azure.com/";
         internal const string Key1 = "90536c6541af426eab1c6e8e4a8cdafe";
         internal const string Key2 = "dd1eeaea8843491dadb258f8642b22ec";
-        private Manager.FileList _manager;
+        private Manager.FileList _fileList;
 
 
-        private Grid AddThumb(Manager.PoeFile poeFile) {
+        private IView AddThumb(Manager.PoeFile poeFile) {
             var grid = new Grid {
                 HeightRequest = 400,
                 RowDefinitions = {
@@ -64,12 +64,12 @@ namespace PDF_OCR_Explorer{
                                    poeFile.DispName;
 
                 fileNameLabel.Text = changedTitle;
-                foreach (var file1 in _manager.Files.FindAll(file => file.OrigFile.Equals(poeFile.OrigFile))){
+                foreach (var file1 in _fileList.Files.FindAll(file => file.OrigFile.Equals(poeFile.OrigFile))){
                     file1.DispName = changedTitle;
                 }
 
                 poeFile.DispName = changedTitle;
-                _manager.Write();
+                _fileList.Write();
             };
             grid.SetColumn(nameEditButton, 1);
             grid.SetRow(nameEditButton, 0);
@@ -84,7 +84,7 @@ namespace PDF_OCR_Explorer{
             };
             removeButton.Clicked += (sender, args) =>
             {
-                _manager.Remove(poeFile.OrigFile);
+                _fileList.Remove(poeFile.OrigFile);
                 foreach (var thumbnailStackChild in ThumbnailStack.ToArray()){
                     var stackedGrid = (Grid)thumbnailStackChild;
                     if (!((Label)stackedGrid.Children[2]).Text.Equals(poeFile.FileHash)) continue;
@@ -94,7 +94,7 @@ namespace PDF_OCR_Explorer{
 
 
                 //grid.Clear();
-                _manager.Write();
+                _fileList.Write();
             };
             var recLabel = new Label {
                 Text = poeFile.FileHash,
@@ -119,13 +119,13 @@ namespace PDF_OCR_Explorer{
             InitializeComponent();
 
 
-            _manager = new Manager.FileList(documentAnalysisClient);
+            _fileList = new Manager.FileList(documentAnalysisClient);
 
             Debug.Print(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             // DirectoryReader = new DirectoryReader();
             //LogViewer.Text = string.Join(Environment.NewLine, DirectoryReader.Files);
             //foreach (var filePath in DirectoryReader.Files){
-            foreach (var file in _manager.Files){
+            foreach (var file in _fileList.Files){
                 Debug.Print(file.OrigFile);
                 ThumbnailStack.Children.Add(AddThumb(file));
             }
@@ -159,7 +159,7 @@ namespace PDF_OCR_Explorer{
             foreach (var fileResult in pickerRes){
                 LogViewer.Text += Environment.NewLine + "Opened: " + fileResult.FullPath;
                 addFiles += fileResult.FileName + Environment.NewLine;
-                var addFile = _manager.Add(file: fileResult.FullPath);
+                var addFile = _fileList.Add(file: fileResult.FullPath);
                 ThumbnailStack.Children.Add(AddThumb(addFile));
                 tasks.Add(addFile.Ocr());
             }
@@ -175,10 +175,8 @@ namespace PDF_OCR_Explorer{
 
         private void DocumentSearchButtonOnClicked(object sender, EventArgs e) {
             //throw new NotImplementedException();
-            var window = new Window(new SearchPage {
-                //Window = { Title = "検索ウィンドウ" }
-            });
-            Application.Current!.OpenWindow(window);
+            var window = new Window(new SearchPage(logViewer: LogViewer,fileList:_fileList));
+            Application.Current?.OpenWindow(window);
         }
     }
 }
