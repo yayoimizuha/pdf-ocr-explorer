@@ -2,8 +2,8 @@
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:fluent="clr-namespace:MauiIcons.Fluent;assembly=MauiIcons.Fluent"
              x:Class="PDF_OCR_Explorer.MainPage" SizeChanged="Window_SizeChanged">
-
 
     <Grid>
         <Grid.RowDefinitions>
@@ -14,16 +14,23 @@
             <ColumnDefinition Width="400" x:Name="ThumbnailColumnDefinition"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <Button x:Name="FilePickerButton" Clicked="FilePickerButton_OnClicked" Margin="20"
+        <Button Clicked="FilePickerButton_OnClicked" Margin="20"
                 Text="ファイル選択"
                 Grid.Column="0" Grid.Row="0">
         </Button>
-        <ScrollView x:Name="ThumbnailView" Loaded="ThumbnailView_Loaded" Grid.Column="0" Grid.Row="1">
+        <ScrollView Loaded="ThumbnailView_Loaded" Grid.Column="0" Grid.Row="1">
             <VerticalStackLayout x:Name="ThumbnailStack"></VerticalStackLayout>
         </ScrollView>
-        <ScrollView Grid.Column="1" Grid.Row="0">
-            <Label x:Name="Label"></Label>
-        </ScrollView>
+        <HorizontalStackLayout Grid.Column="1" Grid.Row="0">
+            <ImageButton Source="{fluent:Icon Icon=Search20}" BorderColor="WhiteSmoke"
+                         Clicked="DocumentSearchButtonOnClicked"
+                         WidthRequest="100">
+            </ImageButton>
+            <ScrollView>
+                <Label x:Name="LogViewer"></Label>
+            </ScrollView>
+        </HorizontalStackLayout>
+
         <WebView Grid.Column="1" Grid.Row="1" x:Name="FileViewer" Source="https://example.com/"></WebView>
     </Grid>
 </ContentPage>

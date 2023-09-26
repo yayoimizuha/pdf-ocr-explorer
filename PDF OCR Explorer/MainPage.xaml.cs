@@ -3,8 +3,8 @@ using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Azure;
 using MauiIcons.Fluent;
 
-namespace PDF_OCR_Explorer {
-    public partial class MainPage : ContentPage {
+namespace PDF_OCR_Explorer{
+    public partial class MainPage : ContentPage{
         private readonly IFilePicker _filePicker;
         int _count = 0;
 
@@ -39,10 +39,11 @@ namespace PDF_OCR_Explorer {
             grid.Add(fileNameLabel);
             var image = new Image { Source = poeFile.ThumbImage() };
             var tapGestureRecognizer = new TapGestureRecognizer();
-            tapGestureRecognizer.Tapped += (sender, args) => {
-                Label.Text += Environment.NewLine + poeFile.OrigFile;
+            tapGestureRecognizer.Tapped += (sender, args) =>
+            {
+                LogViewer.Text += Environment.NewLine + "Opened: " + poeFile.OrigFile;
                 FileViewer.Source = poeFile.FilePath;
-                foreach (var view in ThumbnailStack.Children) {
+                foreach (var view in ThumbnailStack.Children){
                     var stackChild = (Grid)view;
                     stackChild.BackgroundColor = Colors.Transparent;
                 }
@@ -57,12 +58,13 @@ namespace PDF_OCR_Explorer {
                     IconColor = Colors.WhiteSmoke
                 }
             };
-            nameEditButton.Clicked += async (s, e) => {
+            nameEditButton.Clicked += async (s, e) =>
+            {
                 var changedTitle = await DisplayPromptAsync("ファイル名を入力してください。", "", initialValue: poeFile.DispName) ??
                                    poeFile.DispName;
 
                 fileNameLabel.Text = changedTitle;
-                foreach (var file1 in _manager.Files.FindAll(file => file.OrigFile.Equals(poeFile.OrigFile))) {
+                foreach (var file1 in _manager.Files.FindAll(file => file.OrigFile.Equals(poeFile.OrigFile))){
                     file1.DispName = changedTitle;
                 }
 
@@ -80,9 +82,10 @@ namespace PDF_OCR_Explorer {
                     IconColor = Colors.WhiteSmoke
                 }
             };
-            removeButton.Clicked += (sender, args) => {
+            removeButton.Clicked += (sender, args) =>
+            {
                 _manager.Remove(poeFile.OrigFile);
-                foreach (var thumbnailStackChild in ThumbnailStack.ToArray()) {
+                foreach (var thumbnailStackChild in ThumbnailStack.ToArray()){
                     var stackedGrid = (Grid)thumbnailStackChild;
                     if (!((Label)stackedGrid.Children[2]).Text.Equals(poeFile.FileHash)) continue;
                     ThumbnailStack.Remove(thumbnailStackChild);
@@ -120,9 +123,9 @@ namespace PDF_OCR_Explorer {
 
             Debug.Print(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
             // DirectoryReader = new DirectoryReader();
-            //Label.Text = string.Join(Environment.NewLine, DirectoryReader.Files);
+            //LogViewer.Text = string.Join(Environment.NewLine, DirectoryReader.Files);
             //foreach (var filePath in DirectoryReader.Files){
-            foreach (var file in _manager.Files) {
+            foreach (var file in _manager.Files){
                 Debug.Print(file.OrigFile);
                 ThumbnailStack.Children.Add(AddThumb(file));
             }
@@ -153,21 +156,29 @@ namespace PDF_OCR_Explorer {
             var pickerRes = await FilePicker.PickMultipleAsync(_pickOptions);
             var addFiles = "";
             var tasks = new List<Task>();
-            foreach (var fileResult in pickerRes) {
-                Label.Text += Environment.NewLine + fileResult.FullPath;
+            foreach (var fileResult in pickerRes){
+                LogViewer.Text += Environment.NewLine + "Opened: " + fileResult.FullPath;
                 addFiles += fileResult.FileName + Environment.NewLine;
                 var addFile = _manager.Add(file: fileResult.FullPath);
                 ThumbnailStack.Children.Add(AddThumb(addFile));
                 tasks.Add(addFile.Ocr());
             }
 
-            if (addFiles.Length != 0) {
+            if (addFiles.Length != 0){
                 await DisplayAlert("追加されたファイル", addFiles, "OK");
             }
 
-            foreach (var task in tasks) {
+            foreach (var task in tasks){
                 await task;
             }
+        }
+
+        private void DocumentSearchButtonOnClicked(object sender, EventArgs e) {
+            //throw new NotImplementedException();
+            var window = new Window(new SearchPage {
+                //Window = { Title = "検索ウィンドウ" }
+            });
+            Application.Current!.OpenWindow(window);
         }
     }
 }
