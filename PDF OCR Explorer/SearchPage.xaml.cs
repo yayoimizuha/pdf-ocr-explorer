@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using MauiIcons.Fluent;
 
 namespace PDF_OCR_Explorer;
 
@@ -12,7 +13,7 @@ public partial class SearchPage{
         _fileList = fileList;
     }
 
-    private IView AddQueryResult(string fileHash, int page, Lines line, string queryText) {
+    private IView AddQueryResult(string fileHash, int page, Lines line, string queryText, double pageAngle) {
         const int fontSize = 36;
         var findRes = _fileList.Files.Find(value => value.FileHash.Equals(fileHash));
         var grid = new Grid {
@@ -21,7 +22,8 @@ public partial class SearchPage{
                 new ColumnDefinition { Width = new GridLength(120) }, //Thumbnail
                 new ColumnDefinition { Width = new GridLength(540) }, //DispName
                 new ColumnDefinition { Width = new GridLength(180) }, //page
-                new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) } // line text
+                new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }, // line text
+                new ColumnDefinition { Width = new GridLength(120) } // line text
             },
             Margin = new Thickness(6),
         };
@@ -55,14 +57,24 @@ public partial class SearchPage{
             FontSize = fontSize
         }, 3);
 
-        var gestureRecognizer = new TapGestureRecognizer();
-        gestureRecognizer.Tapped += (s, e) =>
-        {
-            var window = new Window(new SearchView(lines: line, pageNum: page, poeFile: findRes));
-            if (Application.Current != null) Application.Current.OpenWindow(window);
-            
+        // var gestureRecognizer = new TapGestureRecognizer();
+        // gestureRecognizer.Tapped += (_, _) =>
+        // {
+        // };
+        // grid.GestureRecognizers.Add(gestureRecognizer);
+        var button = new ImageButton {
+            Source = (ImageSource)new MauiIcon {
+                Icon = FluentIcons.ContentView32
+            }
         };
-        grid.GestureRecognizers.Add(gestureRecognizer);
+        button.Clicked += (_, _) =>
+        {
+            var window = new Window(new SearchView(lines: line, pageNum: page, poeFile: findRes, angle: pageAngle));
+            if (Application.Current != null) Application.Current.OpenWindow(window);
+        };
+        grid.Add(button, 4);
+
+        //grid.GestureRecognizers
         return grid;
     }
 
@@ -87,11 +99,12 @@ public partial class SearchPage{
             var ocrData =
                 JsonSerializer.Deserialize<OcrResultJson>(File.ReadAllText(jsonPath));
             for (var pageNum = 0; pageNum < ocrData.Pages.Length; pageNum++){
+                var angle = ocrData.Pages[pageNum].Angle;
                 foreach (var documentLine in ocrData.Pages[pageNum].Lines){
                     documentLine.Content = documentLine.Content.Replace(" ", "");
                     if (documentLine.Content.Contains(SearchEntry.Text, StringComparison.Ordinal)){
                         SearchRes.Add(AddQueryResult(fileHash: Path.GetFileName(directory), page: pageNum,
-                            line: documentLine, queryText: SearchEntry.Text));
+                            line: documentLine, queryText: SearchEntry.Text, pageAngle: angle));
                     }
                 }
             }
