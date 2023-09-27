@@ -2,7 +2,7 @@
 
 namespace PDF_OCR_Explorer;
 
-public partial class SearchPage {
+public partial class SearchPage{
     private readonly Label _logViewer;
     private readonly Manager.FileList _fileList;
 
@@ -12,8 +12,9 @@ public partial class SearchPage {
         _fileList = fileList;
     }
 
-    private IView AddQueryResult(string fileHash, uint page, string lineText, string queryText) {
+    private IView AddQueryResult(string fileHash, int page, Lines line, string queryText) {
         const int fontSize = 36;
+        var findRes = _fileList.Files.Find(value => value.FileHash.Equals(fileHash));
         var grid = new Grid {
             HeightRequest = 120,
             ColumnDefinitions = {
@@ -26,12 +27,12 @@ public partial class SearchPage {
         };
         _logViewer.Text += Environment.NewLine + fileHash;
         grid.Add(new Image {
-            Source = _fileList.Files.Find(value => value.FileHash.Equals(fileHash)).ThumbImage(),
+            Source = findRes.ThumbImage(),
             HorizontalOptions = LayoutOptions.Center,
             VerticalOptions = LayoutOptions.Center
         }, 0);
         grid.Add(new Label {
-            Text = _fileList.Files.Find(value => value.FileHash.Equals(fileHash)).DispName,
+            Text = findRes.DispName,
             HorizontalOptions = LayoutOptions.Center,
             VerticalOptions = LayoutOptions.Center,
             FontSize = fontSize
@@ -42,7 +43,7 @@ public partial class SearchPage {
             VerticalOptions = LayoutOptions.Center,
             FontSize = fontSize
         }, 2);
-        var splitStr = $" {lineText} ".Split(queryText, StringSplitOptions.None);
+        var splitStr = $" {line.Content} ".Split(queryText, StringSplitOptions.None);
         var formattedString = new FormattedString();
         formattedString.Spans.Add(new Span { Text = splitStr[0].Remove(0, 1) });
         formattedString.Spans.Add(new Span { Text = queryText, TextColor = Colors.Red });
@@ -54,34 +55,43 @@ public partial class SearchPage {
             FontSize = fontSize
         }, 3);
 
+        var gestureRecognizer = new TapGestureRecognizer();
+        gestureRecognizer.Tapped += (s, e) =>
+        {
+            var window = new Window(new SearchView(lines: line, pageNum: page, poeFile: findRes));
+            if (Application.Current != null) Application.Current.OpenWindow(window);
+            
+        };
+        grid.GestureRecognizers.Add(gestureRecognizer);
         return grid;
     }
 
     private void SearchEntry_OnCompleted(object sender, EventArgs e) {
         _logViewer.Text += Environment.NewLine + "Search Queried: " + Manager.PackComma(SearchEntry.Text);
-        if (SearchEntry.Text == "") {
+        if (SearchEntry.Text == ""){
             return;
         }
+
         SearchRes.Clear();
 
-        foreach (var directory in Directory.GetDirectories(Manager.ApplicationDataRoot)) {
+        foreach (var directory in Directory.GetDirectories(Manager.ApplicationDataRoot)){
             var jsonPath = Path.Combine(Manager.ApplicationDataRoot, directory, "ocr.json");
-            if (!File.Exists(jsonPath)) {
+            if (!File.Exists(jsonPath)){
                 continue;
             }
 
-            if (new FileInfo(jsonPath).Length == 0) {
+            if (new FileInfo(jsonPath).Length == 0){
                 continue;
             }
 
             var ocrData =
                 JsonSerializer.Deserialize<OcrResultJson>(File.ReadAllText(jsonPath));
-            for (var pageNum = 0; pageNum < ocrData.Pages.Length; pageNum++) {
-                foreach (var documentLine in ocrData.Pages[pageNum].Lines) {
+            for (var pageNum = 0; pageNum < ocrData.Pages.Length; pageNum++){
+                foreach (var documentLine in ocrData.Pages[pageNum].Lines){
                     documentLine.Content = documentLine.Content.Replace(" ", "");
-                    if (documentLine.Content.Contains(SearchEntry.Text, StringComparison.Ordinal)) {
-                        SearchRes.Add(AddQueryResult(fileHash: Path.GetFileName(directory), page: (uint)pageNum,
-                            lineText: documentLine.Content, queryText: SearchEntry.Text));
+                    if (documentLine.Content.Contains(SearchEntry.Text, StringComparison.Ordinal)){
+                        SearchRes.Add(AddQueryResult(fileHash: Path.GetFileName(directory), page: pageNum,
+                            line: documentLine, queryText: SearchEntry.Text));
                     }
                 }
             }
