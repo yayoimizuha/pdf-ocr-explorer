@@ -46,7 +46,7 @@ public class Manager{
             ImageSource returnImageSource;
 
             if (Path.GetExtension(OrigFile)!.ToLower().Equals(".pdf")){
-#if WINDOWS
+// #if WINDOWS
                 //var renderOptions = new PdfPageRenderOptions();
                 //var pdfFile = await Windows.Storage.StorageFile.GetFileFromPathAsync(OrigFile);
                 //var pdfDocument = await PdfDocument.LoadFromFileAsync(pdfFile);
@@ -64,13 +64,13 @@ public class Manager{
                 ////await renderTargetBitmap.RenderAsync(bitmapImage);
                 //returnImage.Source = bitmapImage.UriSource;
 
-#else
-                throw new NotImplementedException();
-#endif
+// #else
+//                 throw new NotImplementedException();
+// #endif
                 returnImageSource = ImageSource.FromUri(new Uri("https://mizuha-dev.com/files/Adobe_PDF.svg.png"));
             }
             else{
-                returnImageSource = ImageSource.FromFile(OrigFile);
+                returnImageSource = ImageSource.FromStream(() => new MemoryStream(File.ReadAllBytes(OrigFile!)));
             }
 
             return returnImageSource;

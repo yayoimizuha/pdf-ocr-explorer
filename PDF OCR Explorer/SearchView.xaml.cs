@@ -3,116 +3,90 @@ using iText.Kernel.Colors;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.ColorSpaces;
-using Image = SixLabors.ImageSharp.Image;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Processing;
+using Image = Microsoft.Maui.Controls.Image;
+using Path = System.IO.Path;
+using PathBuilder = SixLabors.ImageSharp.Drawing.PathBuilder;
+using PointF = SixLabors.ImageSharp.PointF;
 
-#if IOS || ANDROID || MACCATALYST
-#if IOS || MACCATALYST
-using CoreGraphics;
-#endif
-using Microsoft.Maui.Graphics.Platform;
-#elif WINDOWS
-using Microsoft.Maui.Graphics.Win2D;
-using Size = Windows.Foundation.Size;
-
-#endif
 
 namespace PDF_OCR_Explorer;
 
 public partial class SearchView : ContentPage{
-    private readonly Manager.PoeFile _poeFile;
-
     public SearchView(Lines lines, int pageNum, Manager.PoeFile poeFile, double angle, double width, double height) {
-        _poeFile = poeFile;
         InitializeComponent();
         pageNum++;
-        Header.Text = _poeFile.DispName + $" {pageNum}ページ目";
-        string base64DataUri = null;
-        if (Path.GetExtension(_poeFile.OrigFile)!.ToLower().Equals(".pdf")){
-            var reader = new PdfReader(_poeFile.FilePath);
+        Header.Text = poeFile.DispName + $" {pageNum}ページ目";
+        if (Path.GetExtension(poeFile.OrigFile)!.ToLower().Equals(".pdf")){
+            var reader = new PdfReader(poeFile.FilePath);
             reader.SetUnethicalReading(true);
             var pdfDocument = new PdfDocument(reader);
-            var outputStream = new MemoryStream();
+            using var outputStream = new MemoryStream();
             var pdfWriter = new PdfWriter(outputStream);
             pdfWriter.SetCloseStream(false);
             var outputDocument = new PdfDocument(pdfWriter);
             pdfDocument.CopyPagesTo(pageNum, pageNum, outputDocument);
-            //pdfDocument.GetPage(pageNum).SetRotation((int)Math.Round(angle / 90) * 90).CopyTo(outputDocument);
 
             var canvas = new PdfCanvas(outputDocument.GetPage(1));
-            //canvas.SetStrokeColor(ColorConstants.BLUE)
-            //    .SetLineWidth(outputDocument.GetPage(1).GetPageSize().GetX() / 100f)
-            //    .MoveTo(lines.BoundingPolygon.First().X, lines.BoundingPolygon.First().Y)
-            //    .LineTo(lines.BoundingPolygon[1].X, lines.BoundingPolygon[1].Y).ClosePathStroke();
+
             var pageSize = outputDocument.GetPage(1).GetPageSize();
             canvas.SetStrokeColor(ColorConstants.RED)
-                //.SetLineWidth(1f)
                 .MoveTo(pageSize.GetHeight() / height * lines.BoundingPolygon[0].X,
-                    pageSize.GetHeight() - pageSize.GetWidth() / width * lines.BoundingPolygon[0].Y)
-                .LineTo(pageSize.GetHeight() / height * lines.BoundingPolygon[1].X,
-                    pageSize.GetHeight() - pageSize.GetWidth() / width * lines.BoundingPolygon[1].Y)
-                .LineTo(pageSize.GetHeight() / height * lines.BoundingPolygon[2].X,
-                    pageSize.GetHeight() - pageSize.GetWidth() / width * lines.BoundingPolygon[2].Y)
-                .LineTo(pageSize.GetHeight() / height * lines.BoundingPolygon[3].X,
-                    pageSize.GetHeight() - pageSize.GetWidth() / width * lines.BoundingPolygon[3].Y);
+                    pageSize.GetHeight() - pageSize.GetWidth() / width * lines.BoundingPolygon[0].Y);
+            foreach (var polygon in lines.BoundingPolygon[1..]){
+                canvas.LineTo(pageSize.GetHeight() / height * polygon.X,
+                    pageSize.GetHeight() - pageSize.GetWidth() / width * polygon.Y);
+            }
+
             canvas.ClosePathStroke();
             outputDocument.GetPage(1).SetRotation((int)(Math.Round(angle / 90) * -90));
-
-            //foreach (var polygon in lines.BoundingPolygon[1..]) {
-            //    canvas.LineTo(polygon.X, polygon.Y);
-            //}
-
-            // canvas.Stroke();
 
 
             outputDocument.Close();
             pdfWriter.Flush();
-            // pdfWriter.Close();
             Debug.Write(outputStream.Length);
             Debug.Write(angle);
-            base64DataUri = "data:application/pdf;base64," + Convert.ToBase64String(outputStream.ToArray());
-            //Debug.Write(base64DataUri);
+            View.Add(new WebView {
+                Source = new HtmlWebViewSource {
+                    Html =
+                        $"<!DOCTYPE html><body><embed src=\"data:application/pdf;base64,{
+                            Convert.ToBase64String(outputStream.ToArray())}\" type=\"application/pdf\" " +
+                        $"style=\"width:100%;height:100%\"></body></html>"
+                }
+            });
         }
         else{
-            var fileStream = new FileStream(poeFile.FilePath, FileMode.Open);
-//#if IOS || ANDROID || MACCATALYST
-//            var image = PlatformImage.FromStream(fileStream);
-//#if IOS || MACCATALYST
-//            var canvas = new PlatformCanvas(CGColorSpace.CreateDeviceRGB);
-//#else
-//            var canvas = new PlatformCanvas();
-//#endif
-//#elif WINDOWS
-//            var image = new W2DImageLoadingService().FromStream(fileStream);
-//            var canvas = new W2DCanvas{CanvasSize =new Size(){Height = image.Height,Width = image.Width}};
-//#endif
-//            canvas.DrawImage(image, 0, 0, image.Width, image.Height);
-//            var path = new PathF();
-//            path.MoveTo(x: (float)lines.BoundingPolygon[0].X, y: (float)lines.BoundingPolygon[0].Y);
-//            foreach (var polygon in lines.BoundingPolygon){
-//                path.LineTo(x: (float)polygon.X, y: (float)polygon.Y);
-//            }
-//
-//            path.Close();
-//            canvas.StrokeColor = Colors.Red;
-//            canvas.DrawPath(path);
-//            canvas.SaveState();
-//            using var outputStream = new MemoryStream();
-//            image.Save(outputStream);
-            //outputStream.Flush();
-            var image = Image.Load(_poeFile.FilePath);
-            
+            using var fileStream = new FileStream(poeFile.FilePath, FileMode.Open);
+            using var rgbImageStream = new MemoryStream();
+            SixLabors.ImageSharp.Image.Load(fileStream)
+                .Save(rgbImageStream, new PngEncoder { ColorType = PngColorType.Rgb });
 
-
-            base64DataUri = $"data:image/{Path.GetExtension(_poeFile.FilePath)!.Replace(".", "")};base64," +
-                            Convert.ToBase64String(outputStream.ToArray());
-        }
-
-        View.Add(new WebView {
-            Source = new HtmlWebViewSource {
-                Html = $"<!DOCTYPE html><body><embed src=\"{base64DataUri}\" type=\"application/pdf\" " +
-                       $"style=\"width:100%;height:100%\"></body></html>"
+            var image = SixLabors.ImageSharp.Image.Load(rgbImageStream.ToArray());
+            var pathBuilder = new PathBuilder();
+            pathBuilder.ResetOrigin();
+            for (var i = 1; i < lines.BoundingPolygon.Length; i++){
+                var first = lines.BoundingPolygon[i - 1];
+                var second = lines.BoundingPolygon[i];
+                pathBuilder.AddLine(new PointF { X = (float)first.X, Y = (float)first.Y },
+                    new PointF { X = (float)second.X, Y = (float)second.Y });
             }
-        });
+
+            var lastItem = lines.BoundingPolygon.Last();
+            var firstItem = lines.BoundingPolygon.First();
+
+            pathBuilder.AddLine(new PointF { X = (float)lastItem.X, Y = (float)lastItem.Y },
+                new PointF { X = (float)firstItem.X, Y = (float)firstItem.Y });
+            var path = pathBuilder.Build();
+            image.Mutate(ctx => ctx.Draw(SixLabors.ImageSharp.Color.Red, 10, path));
+            using var outputStream = new MemoryStream();
+            image.SaveAsPng(outputStream);
+            var imageBytes = outputStream.ToArray();
+            View.Add(
+                new Image {
+                    Source = ImageSource.FromStream(() => new MemoryStream(imageBytes))
+                });
+        }
     }
 }

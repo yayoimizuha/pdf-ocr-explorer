@@ -2,6 +2,7 @@
 using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Azure;
 using MauiIcons.Fluent;
+using Image = Microsoft.Maui.Controls.Image;
 
 namespace PDF_OCR_Explorer{
     public partial class MainPage : ContentPage{
