@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using MauiIcons.Fluent;
+using Image = Microsoft.Maui.Controls.Image;
 
 namespace PDF_OCR_Explorer;
 
@@ -13,7 +14,8 @@ public partial class SearchPage{
         _fileList = fileList;
     }
 
-    private IView AddQueryResult(string fileHash, int page, Lines line, string queryText, double pageAngle) {
+    private IView AddQueryResult(string fileHash, int page, Lines line, string queryText, double pageAngle,
+        double pageHeight, double pageWidth) {
         const int fontSize = 36;
         var findRes = _fileList.Files.Find(value => value.FileHash.Equals(fileHash));
         var grid = new Grid {
@@ -69,7 +71,8 @@ public partial class SearchPage{
         };
         button.Clicked += (_, _) =>
         {
-            var window = new Window(new SearchView(lines: line, pageNum: page, poeFile: findRes, angle: pageAngle));
+            var window = new Window(new SearchView(lines: line, pageNum: page, poeFile: findRes, angle: pageAngle,
+                width: pageWidth, height: pageHeight));
             if (Application.Current != null) Application.Current.OpenWindow(window);
         };
         grid.Add(button, 4);
@@ -100,11 +103,14 @@ public partial class SearchPage{
                 JsonSerializer.Deserialize<OcrResultJson>(File.ReadAllText(jsonPath));
             for (var pageNum = 0; pageNum < ocrData.Pages.Length; pageNum++){
                 var angle = ocrData.Pages[pageNum].Angle;
+                var height = ocrData.Pages[pageNum].Height;
+                var width = ocrData.Pages[pageNum].Width;
                 foreach (var documentLine in ocrData.Pages[pageNum].Lines){
                     documentLine.Content = documentLine.Content.Replace(" ", "");
                     if (documentLine.Content.Contains(SearchEntry.Text, StringComparison.Ordinal)){
                         SearchRes.Add(AddQueryResult(fileHash: Path.GetFileName(directory), page: pageNum,
-                            line: documentLine, queryText: SearchEntry.Text, pageAngle: angle));
+                            line: documentLine, queryText: SearchEntry.Text, pageAngle: angle, pageWidth: width,
+                            pageHeight: height));
                     }
                 }
             }
